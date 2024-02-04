@@ -41,7 +41,7 @@ userHoverElements.forEach(function(element) {
         border-radius: 100%;
         font-weight: bold;
         position: absolute;
-        z-index: 999;
+        z-index: 900;
         width: 30px;
         height: 30px;
         cursor: pointer;
@@ -170,9 +170,10 @@ function createBlockInfo(data) {
 
             <ul style="list-style: none;
             padding: 0;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 1rem;
-            max-width: 100%;
+            max-width: 400px;
             width: 100%;
             margin: 10px 5px;
             "
