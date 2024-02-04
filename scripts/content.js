@@ -7,6 +7,10 @@ const badgeColor = ['#E8D37D', '#F27878']
 const defaultAvatar = 'https://www.gravatar.com/avatar/bc680ed8d2555accacebc0fe2d8c9691?s=256&d=identicon&r=PG';
 //work like enum, will get random color
 
+
+//IF SOMETHNG WRONG, CHECK THE SAMPLE API AND ATTRIBUTE
+
+
 // PAGE 1
 
 var userHoverElements = document.querySelectorAll('.user-info');
@@ -108,7 +112,7 @@ function createBlockInfo(data) {
 
     badges.forEach((e,index)=> {
         badgesHtmlString += `
-        <li style="border: solid; border-radius: 10px; padding: 8px 4px; border-width: 2px; background-color: ${badgeColor[index%badgeColor.length]}; width: fit-content;">
+        <li style="border: solid; border-radius: 10px; padding: 8px 6px; border-width: 2px; background-color: ${badgeColor[index%badgeColor.length]}; width: fit-content; font-weight: 600;">
             ${e}
         </li>   
         
@@ -159,7 +163,7 @@ function createBlockInfo(data) {
                 margin: 10px 5px;
                 "
             >
-                <li style="border: solid; border-radius: 10px; padding: 8px 4px; border-width: 2px; background-color: #82D9AB; width: fit-content;">
+                <li style="border: solid; border-radius: 10px; padding: 8px 6px; border-width: 2px; background-color: #82D9AB; width: fit-content; font-weight: 600;">
                     Accepted answer rate: ${data.accuracy}%
                 </li>        
             </ul>
@@ -191,8 +195,8 @@ function createBlockInfo(data) {
         width: 30px;
         height: 30px;
         cursor: pointer;
-        top: 0;
-        right: 0;
+        top: 5px;
+        right: 5px;
         color: white;
         border-width: 0.5px;
     `
@@ -285,7 +289,7 @@ tagInfoBox.id = 'tagInfoBox';
 
 tagInfoBox.style.cssText = `
     width: 400px;
-    height: 600px;
+    height: fit-content;
     background-color: white;
     border: solid; 
     border-radius: 10px; 
@@ -297,27 +301,134 @@ tagInfoBox.style.cssText = `
     right: 50px;
 `
 
-tagInfoBox.innerHTML = `
-    <div style="
 
-    ">
-
-    </div>
-
-`
 
 document.body.appendChild(tagInfoBox);
 
 var postTags = document.querySelectorAll('.post-tag');
 
-postTags.forEach(function(postTag) {
-    
-    postTag.addEventListener('mouseover', function() {
-        console.log("Hover tag...");
-    tagInfoBox.style.display = 'block';
-    });
+postTags.forEach(function(element) {
 
-    postTag.addEventListener('mouseout', function() {
-    tagInfoBox.style.display = 'none';
+    let newBtn = document.createElement('button');
+    newBtn.innerHTML = '?'
+    newBtn.style = `
+        background-color: gray;
+        border-radius: 100%;
+        font-weight: bold;
+        position: absolute;
+        z-index: 999;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        position: relative;
+        left: -10px;
+    `
+
+    element.parentElement.appendChild(newBtn)
+
+    // element.appendChild(newBtn)
+
+    var hrefValue = element.getAttribute('href');
+
+    var tagMatch = hrefValue.match(/\/questions\/tagged\/(.+)/);
+
+    if (tagMatch && tagMatch[1]) {
+        var tagName = tagMatch[1];
+        console.log("Tag Name:", tagName);
+    } else {
+        console.error("Không tìm thấy tên tag.");
+    }
+    
+    newBtn.addEventListener('click', function() {
+        console.log("Hover tag...");
+
+        let info_comment_API = baseAPI + 'info_users/';
+        // README: have tag name: tagName (variable); Change api route.
+
+        let loader = createLoader();
+        element.insertAdjacentElement('afterbegin',loader);
+    
+        fetch(info_comment_API)
+        .then(response => response.json())
+        .then(data => {
+            element.removeChild(loader);
+
+            updateBoxContent(data, tagName);
+
+            tagInfoBox.style.display = 'block';
+
+        })
+        .catch(error => {
+                console.error('Error fetching data:', error)
+                element.removeChild(loader);
+            });
+
+
+
+
+        
     });
 });
+
+function updateBoxContent(users, tagName) {
+
+    let usersStringHtml = '';
+    
+    users.forEach((e)=>{
+        usersStringHtml += `
+        <div style="margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between;">
+                <p style="width: 40%">1. ${e.displayName}</p>
+                <div style="width: 60%">
+                    <p style="font-weight: bold;"><span style="font-weight: bold;">${e.reputation}</span> reputation</p>
+                    <p style="font-weight: bold;"><span style="font-weight: bold;">${e.answered}</span> ${tagName} questions answered</p>
+                </div>
+            </div>
+            <ul style="list-style: none;
+                padding: 0;
+                display: grid;
+                max-width: 100%;
+                width: 100%; 
+                margin: 10px 5px;
+                "
+            >
+                <li style="border: solid; border-radius: 10px; padding: 8px 4px; border-width: 2px; background-color: #82D9AB; width: 100%; text-align: center; font-weight: 600;">
+                    Accepted ${tagName} answer rate: ${e.accuracy}%
+                </li>        
+            </ul>
+        </div>
+        `
+    })
+
+    tagInfoBox.innerHTML = `
+    <div style="padding: 20px 40px;">
+        <p style="font-weight: bold; font-size: 20px;">You should ask: </p>
+        ${usersStringHtml}
+
+    </div>
+    `
+
+    let newBtn = document.createElement('button');
+    newBtn.innerHTML = 'x';
+    newBtn.style = `
+        background-color: red;
+        padding: 4px;
+        border-radius: 100%;
+        font-weight: bold;
+        position: absolute;
+        z-index: 999;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        top: 5px;
+        right: 5px;
+        color: white;
+        border-width: 0.5px;
+    `
+
+    tagInfoBox.appendChild(newBtn)
+
+    tagInfoBox.addEventListener('click', function() {
+        tagInfoBox.style.display = 'none';
+    });
+}
